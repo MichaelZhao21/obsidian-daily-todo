@@ -1,4 +1,53 @@
-# Obsidian Sample Plugin
+# Obsidian Daily Todo
+
+This is a simple plugin I made to basically just insert a few lines of text from a template lol.
+
+Basically the template is formatted with the following:
+
+```md
+## Recurring Tasks
+**Daily**
+- [ ] Sweep kitchen
+- [ ] Wash dishes
+
+**Weekly**
+- [ ] Laundry
+- [ ] Take out trash
+
+**Monthly**
+- [ ] Do something
+```
+
+The extension will have a setting for the template file and header used (here the header is `Recurring Tasks`). The "Daily" headers are hardcoded, so you will need to use `**Daily**` etc etc specifically. The extension will get all the text from the Daily header to the Weekly header and insert it with the current date. The weekly task insert will get all the content from Weekly header to the Monthly header. See the following:
+
+Daily insert:
+
+```md
+## Friday 1/2
+**Daily**
+- [ ] Sweep kitchen
+- [ ] Wash dishes
+
+
+```
+
+Weekly insert:
+
+```md
+**Weekly**
+- [ ] Laundry
+- [ ] Take out trash
+
+
+```
+
+I basically added 2 commands:
+- Insert Daily Todo
+- Insert Weekly Tasks
+
+Ok that's it... read the code bc it's very simple (it's all in `src/main.ts` basically).
+
+# Obsidian Sample Plugin (everything below here is from template lol)
 
 This is a sample plugin for Obsidian (https://obsidian.md).
 
