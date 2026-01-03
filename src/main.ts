@@ -1,4 +1,4 @@
-import {MarkdownView, Plugin, TFile} from 'obsidian';
+import {MarkdownView, Notice, Plugin, TFile} from 'obsidian';
 import {DEFAULT_SETTINGS, TodoPluginSettings, TodoSettingTab} from "./settings";
 import dayjs from 'dayjs';
 
@@ -65,7 +65,9 @@ export default class DailyTodoPlugin extends Plugin {
 	async getTemplateContents(): Promise<string> {
 		const file = this.app.vault.getAbstractFileByPath(this.settings.templateName + ".md");
 		if (!(file instanceof TFile)) {
-			throw new Error(`Template file not found: ${this.settings.templateName}`);
+			const err = `Error: Template file not found: ${this.settings.templateName}`;
+			new Notice(err);
+			throw new Error(err);
 		}
 
 		const contents = await this.app.vault.read(file);
