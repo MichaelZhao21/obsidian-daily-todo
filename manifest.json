@@ -1,11 +1,10 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "obsidian-daily-todo",
+	"name": "Daily Todo",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "This is a plugin used to insert in my daily/weekly tasks from a template",
+	"author": "Michael Zhao",
+	"authorUrl": "https://michaelzhao.xyz",
 	"isDesktopOnly": false
 }

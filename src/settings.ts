@@ -1,18 +1,20 @@
 import {App, PluginSettingTab, Setting} from "obsidian";
-import MyPlugin from "./main";
+import DailyTodoPlugin from "./main";
 
-export interface MyPluginSettings {
-	mySetting: string;
+export interface TodoPluginSettings {
+	templateName: string;
+	sectionHeader: string;
 }
 
-export const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+export const DEFAULT_SETTINGS: TodoPluginSettings = {
+	templateName: 'Task Backlog',
+	sectionHeader: 'Recurring Tasks'
 }
 
-export class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+export class TodoSettingTab extends PluginSettingTab {
+	plugin: DailyTodoPlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: DailyTodoPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -23,13 +25,24 @@ export class SampleSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Settings #1')
-			.setDesc('It\'s a secret')
+			.setName('Template File Name')
+			.setDesc('Enter the full name/path of the template file to use.')
 			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+				.setPlaceholder('File name (full vault path)')
+				.setValue(this.plugin.settings.templateName)
 				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
+					this.plugin.settings.templateName = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Template Section Header')
+			.setDesc('Within the template section, enter the name of the header to start looking for tasks at.')
+			.addText(text => text
+				.setPlaceholder('Header name')
+				.setValue(this.plugin.settings.sectionHeader)
+				.onChange(async (value) => {
+					this.plugin.settings.sectionHeader = value;
 					await this.plugin.saveSettings();
 				}));
 	}

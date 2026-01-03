@@ -1,99 +1,82 @@
-import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
-import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
+import {MarkdownView, Plugin, TFile} from 'obsidian';
+import {DEFAULT_SETTINGS, TodoPluginSettings, TodoSettingTab} from "./settings";
+import dayjs from 'dayjs';
 
-// Remember to rename these classes and interfaces!
+const DAILY_HEADER = "**Daily**";
+const WEEKLY_HEADER = "**Weekly**";
+const MONTHLY_HEADER = "**Monthly**";
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class DailyTodoPlugin extends Plugin {
+	settings: TodoPluginSettings;
 
 	async onload() {
 		await this.loadSettings();
 
-		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('dice', 'Sample', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status bar text');
-
-		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
-			id: 'open-modal-simple',
-			name: 'Open modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
+			id: 'insert-daily-todo',
+			name: 'Insert Daily Todo',
+			callback: this.insertDailyTodo.bind(this),
 		});
-		// This adds an editor command that can perform some operation on the current editor instance
 		this.addCommand({
-			id: 'replace-selected',
-			name: 'Replace selected content',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				editor.replaceSelection('Sample editor command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-modal-complex',
-			name: 'Open modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-				return false;
-			}
-		});
+			id: 'insert-weekly-tasks',
+			name: 'Insert Weekly Tasks',
+			callback: this.insertWeeklyTasks.bind(this),
+		})
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			new Notice("Click");
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-
+		this.addSettingTab(new TodoSettingTab(this.app, this));
 	}
 
 	onunload() {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<MyPluginSettings>);
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<TodoPluginSettings>);
 	}
 
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
-}
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
+	async insertDailyTodo() {
+		const date = dayjs().format('dddd M/D');
+		const template = await this.getTemplateContents();
+
+		// Find daily tasks
+		const dailyIndex = template.indexOf(DAILY_HEADER);
+		const weeklyIndex = template.indexOf(WEEKLY_HEADER);
+		const dailyTasks = template.substring(dailyIndex, weeklyIndex);
+
+		const formatted = `## ${date}\n- [ ] \n\n${dailyTasks}`;
+		this.insertAtCursor(formatted);
 	}
 
-	onOpen() {
-		let {contentEl} = this;
-		contentEl.setText('Woah!');
+	async insertWeeklyTasks() {
+		const template = await this.getTemplateContents();
+
+		// Find weekly tasks
+		const weeklyIndex = template.indexOf(WEEKLY_HEADER);
+		const monthlyIndex = template.indexOf(MONTHLY_HEADER);
+		const weeklyTasks = template.substring(weeklyIndex, monthlyIndex);
+
+		this.insertAtCursor(weeklyTasks);
 	}
 
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
+	async getTemplateContents(): Promise<string> {
+		const file = this.app.vault.getAbstractFileByPath(this.settings.templateName + ".md");
+		if (!(file instanceof TFile)) {
+			throw new Error(`Template file not found: ${this.settings.templateName}`);
+		}
+
+		const contents = await this.app.vault.read(file);
+		return contents.substring(contents.indexOf(this.settings.sectionHeader));
+	}
+
+	insertAtCursor(text: string) {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!view) return;
+
+		const editor = view.editor;
+		editor.replaceSelection(text);
 	}
 }
