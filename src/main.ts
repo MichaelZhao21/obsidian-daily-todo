@@ -1,6 +1,7 @@
-import {MarkdownView, Notice, Plugin, TFile} from 'obsidian';
+import {MarkdownView, Modal, Notice, Plugin, TFile, TFolder} from 'obsidian';
 import {DEFAULT_SETTINGS, TodoPluginSettings, TodoSettingTab} from "./settings";
 import dayjs from 'dayjs';
+import { QuickNoteModal } from 'quickNote';
 
 const DAILY_HEADER = "**Daily**";
 const WEEKLY_HEADER = "**Weekly**";
@@ -21,6 +22,11 @@ export default class DailyTodoPlugin extends Plugin {
 			id: 'insert-weekly-tasks',
 			name: 'Insert Weekly Tasks',
 			callback: this.insertWeeklyTasks.bind(this),
+		})
+		this.addCommand({
+			id: 'quick-note',
+			name: 'Quick Note',
+			callback: this.addQuickNote.bind(this)
 		})
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
@@ -63,9 +69,9 @@ export default class DailyTodoPlugin extends Plugin {
 	}
 
 	async getTemplateContents(): Promise<string> {
-		const file = this.app.vault.getAbstractFileByPath(this.settings.templateName + ".md");
+		const file = this.app.vault.getAbstractFileByPath(this.settings.templatePath + ".md");
 		if (!(file instanceof TFile)) {
-			const err = `Error: Template file not found: ${this.settings.templateName}`;
+			const err = `Error: Template file not found: ${this.settings.templatePath}`;
 			new Notice(err);
 			throw new Error(err);
 		}
@@ -81,4 +87,31 @@ export default class DailyTodoPlugin extends Plugin {
 		const editor = view.editor;
 		editor.replaceSelection(text);
 	}
+
+	async addQuickNote() {
+		const modal = new QuickNoteModal(this.app, async (text) => {
+			if (!text.trim()) return;
+
+			const splitPoint = text.indexOf('\n');
+			const title = splitPoint === -1 ? text : text.substring(0, splitPoint);
+			const content = splitPoint === -1 ? "" : text.substring(splitPoint + 1);
+
+			const path = this.settings.quickNotePath;
+			const file = this.app.vault.getAbstractFileByPath(path + '.md');
+
+			if (!(file instanceof TFile)) {
+				new Notice(`Error: Quick note file ${path} not found`);
+				return;
+			}
+
+			const existing = await this.app.vault.read(file);
+			const nl = existing.endsWith('\n') ? '' : '\n';
+			const updated = `${existing}${nl}\n## ${title}\n${content}\n`;
+
+			await this.app.vault.modify(file, updated);
+		});
+
+		modal.open();
+	}
 }
+

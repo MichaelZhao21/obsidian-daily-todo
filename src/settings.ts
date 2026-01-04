@@ -2,13 +2,15 @@ import {App, PluginSettingTab, Setting} from "obsidian";
 import DailyTodoPlugin from "./main";
 
 export interface TodoPluginSettings {
-	templateName: string;
+	templatePath: string;
 	sectionHeader: string;
+	quickNotePath: string;
 }
 
 export const DEFAULT_SETTINGS: TodoPluginSettings = {
-	templateName: 'Task Backlog',
-	sectionHeader: 'Recurring Tasks'
+	templatePath: 'Task Backlog',
+	sectionHeader: 'Recurring Tasks',
+	quickNotePath: 'Quick Notes',
 }
 
 export class TodoSettingTab extends PluginSettingTab {
@@ -29,9 +31,9 @@ export class TodoSettingTab extends PluginSettingTab {
 			.setDesc('Enter the full name/path of the template file to use.')
 			.addText(text => text
 				.setPlaceholder('File name (full vault path)')
-				.setValue(this.plugin.settings.templateName)
+				.setValue(this.plugin.settings.templatePath)
 				.onChange(async (value) => {
-					this.plugin.settings.templateName = value;
+					this.plugin.settings.templatePath = value;
 					await this.plugin.saveSettings();
 				}));
 
@@ -45,5 +47,17 @@ export class TodoSettingTab extends PluginSettingTab {
 					this.plugin.settings.sectionHeader = value;
 					await this.plugin.saveSettings();
 				}));
+
+		new Setting(containerEl)
+			.setName('Quick Notes File')
+			.setDesc('File for adding quick notes to. The quick notes will be added to the bottom of the file.')
+			.addText(text => text
+				.setPlaceholder('File name (full vault path)')
+				.setValue(this.plugin.settings.quickNotePath)
+				.onChange(async (value) => {
+					this.plugin.settings.quickNotePath = value;
+					await this.plugin.saveSettings();
+				})
+			)
 	}
 }
