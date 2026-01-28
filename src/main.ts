@@ -15,8 +15,8 @@ export default class DailyTodoPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'insert-daily-todo',
-			name: 'Insert Daily Todo',
-			callback: this.insertDailyTodo.bind(this),
+			name: 'Insert Today Todo',
+			callback: this.insertTodayTodo.bind(this),
 		});
 		this.addCommand({
 			id: 'insert-tomorrow-todo',
@@ -49,7 +49,7 @@ export default class DailyTodoPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 
-	async insertDailyTodo(tomorrow: boolean = false) {
+	async insertTodayTodo(tomorrow: boolean = false) {
 		const date = tomorrow ? dayjs().add(1, 'day') : dayjs();
 		const dateFormatted = date.format('dddd M/D');
 		const template = await this.getTemplateContents();
@@ -64,7 +64,7 @@ export default class DailyTodoPlugin extends Plugin {
 	}
 
 	async insertTomorrowTodo() {
-		await this.insertDailyTodo(true);
+		await this.insertTodayTodo(true);
 	}
 
 	async insertWeeklyTasks() {
